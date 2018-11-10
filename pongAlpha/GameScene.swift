@@ -11,8 +11,8 @@ import GameplayKit
 import ARKit
 
 class GameScene: SKScene, ARSessionDelegate {
-    var LookAtPointX = 0.0
-    var LookAtPointY = 0.0
+    var LookAtPointX: Float = 0.0
+    var LookAtPointZ: Float = 0.0
     var myARSession = ARSession()
     
     // What: Pong game model
@@ -58,7 +58,6 @@ class GameScene: SKScene, ARSessionDelegate {
         let border = SKPhysicsBody(edgeLoopFrom: self.frame)
         border.friction = 0
         border.restitution = 1
-        
         self.physicsBody = border
     }
     
@@ -73,15 +72,14 @@ class GameScene: SKScene, ARSessionDelegate {
         ball.texture = SKTexture(image: "😀".image()!)
         ball.position = CGPoint(x: 0, y: 0)
         ball.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
-        ball.physicsBody?.applyImpulse(CGVector(dx: 40, dy: 40))
+        ball.physicsBody?.applyImpulse(CGVector(dx: 50, dy: 50))
     }
     
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
-        computer.run(SKAction.moveTo(x: ball.position.x, duration: 0.1))
-        player0.run(SKAction.moveTo(x: ball.position.x, duration: 0.2))
-        
+        computer.run(SKAction.moveTo(x: ball.position.x, duration: 0.2))
+        player0.run(SKAction.moveTo(x: getLookPosition(), duration: 0.5))
         if ball.position.y < player0.position.y - player0.size.height * 2 {
             computerScore += 1
             serveBall()
@@ -94,14 +92,45 @@ class GameScene: SKScene, ARSessionDelegate {
 }
 
 extension GameScene {
+    func getLookPosition() -> CGFloat {
+        return (LookAtPointX > 0) ? self.frame.maxX : self.frame.minX
+    }
+    
+//    func getLookPosition() -> CGFloat {
+//        let leftMostTheta: CGFloat = 0.1
+//        let rightMostTheta: CGFloat = -0.1
+//        let minX = self.frame.minX
+//        let maxX = self.frame.maxX
+//        let theta = CGFloat(atan(LookAtPointX / LookAtPointZ))
+//        var positionInScene = (minX - maxX) / (rightMostTheta - leftMostTheta) * theta
+//        positionInScene = (positionInScene > maxX) ? maxX : positionInScene
+//        positionInScene = (positionInScene < minX) ? minX : positionInScene
+//        return positionInScene
+//    }
+    
+    
+//    func convertLookPoint(ToScenePosition point: Float) -> CGFloat {
+//        let leftMostPoint: CGFloat = 0.1
+//        let rightMostPoint: CGFloat = -0.1
+//        let minX = self.frame.minX
+//        let maxX = self.frame.maxX
+//        var positionInScene = (minX - maxX) / (rightMostPoint - leftMostPoint) * CGFloat(point)
+//        positionInScene = (positionInScene > maxX) ? maxX : positionInScene
+//        positionInScene = (positionInScene < minX) ? minX : positionInScene
+//        return positionInScene
+//    }
+    
+    
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
         let faceAnchor = anchors.first as? ARFaceAnchor
+        print("\(faceAnchor?.transform.debugDescription)")
+        LookAtPointX = Float(faceAnchor!.lookAtPoint.x)
+        LookAtPointZ = Float(faceAnchor!.lookAtPoint.z)
         XLabel.text = String(format:"%.4f",faceAnchor!.lookAtPoint.x)
         YLabel.text = String(format:"%.4f",faceAnchor!.lookAtPoint.y)
     }
     
 }
-
 
 
 
