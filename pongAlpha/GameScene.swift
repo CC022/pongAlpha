@@ -11,6 +11,7 @@ import GameplayKit
 import ARKit
 
 class GameScene: SKScene, ARSessionDelegate {
+    var printFreqCnt = 0
     var LookAtPointX: Float = 0.0
     var LookAtPointZ: Float = 0.0
     var myARSession = ARSession()
@@ -38,7 +39,7 @@ class GameScene: SKScene, ARSessionDelegate {
         myARSession.delegate = self
         myARSession.run(ARFaceTrackingConfiguration())
         
-
+        
         ball = self.childNode(withName: "ball") as! SKSpriteNode
         computer = self.childNode(withName: "computer") as! SKSpriteNode
         player0 = self.childNode(withName: "player0") as! SKSpriteNode
@@ -65,7 +66,7 @@ class GameScene: SKScene, ARSessionDelegate {
         player0Score = 0
         computerScore = 0
     }
-
+    
     func serveBall() {
         player0ScoreLabel.text = "\(player0Score)"
         computerScoreLabel.text = "\(computerScore)"
@@ -96,34 +97,51 @@ extension GameScene {
         return (LookAtPointX > 0) ? self.frame.maxX : self.frame.minX
     }
     
-//    func getLookPosition() -> CGFloat {
-//        let leftMostTheta: CGFloat = 0.1
-//        let rightMostTheta: CGFloat = -0.1
-//        let minX = self.frame.minX
-//        let maxX = self.frame.maxX
-//        let theta = CGFloat(atan(LookAtPointX / LookAtPointZ))
-//        var positionInScene = (minX - maxX) / (rightMostTheta - leftMostTheta) * theta
-//        positionInScene = (positionInScene > maxX) ? maxX : positionInScene
-//        positionInScene = (positionInScene < minX) ? minX : positionInScene
-//        return positionInScene
-//    }
+    //    func getLookPosition() -> CGFloat {
+    //        let leftMostTheta: CGFloat = 0.1
+    //        let rightMostTheta: CGFloat = -0.1
+    //        let minX = self.frame.minX
+    //        let maxX = self.frame.maxX
+    //        let theta = CGFloat(atan(LookAtPointX / LookAtPointZ))
+    //        var positionInScene = (minX - maxX) / (rightMostTheta - leftMostTheta) * theta
+    //        positionInScene = (positionInScene > maxX) ? maxX : positionInScene
+    //        positionInScene = (positionInScene < minX) ? minX : positionInScene
+    //        return positionInScene
+    //    }
     
     
-//    func convertLookPoint(ToScenePosition point: Float) -> CGFloat {
-//        let leftMostPoint: CGFloat = 0.1
-//        let rightMostPoint: CGFloat = -0.1
-//        let minX = self.frame.minX
-//        let maxX = self.frame.maxX
-//        var positionInScene = (minX - maxX) / (rightMostPoint - leftMostPoint) * CGFloat(point)
-//        positionInScene = (positionInScene > maxX) ? maxX : positionInScene
-//        positionInScene = (positionInScene < minX) ? minX : positionInScene
-//        return positionInScene
-//    }
+    //    func convertLookPoint(ToScenePosition point: Float) -> CGFloat {
+    //        let leftMostPoint: CGFloat = 0.1
+    //        let rightMostPoint: CGFloat = -0.1
+    //        let minX = self.frame.minX
+    //        let maxX = self.frame.maxX
+    //        var positionInScene = (minX - maxX) / (rightMostPoint - leftMostPoint) * CGFloat(point)
+    //        positionInScene = (positionInScene > maxX) ? maxX : positionInScene
+    //        positionInScene = (positionInScene < minX) ? minX : positionInScene
+    //        return positionInScene
+    //    }
     
     
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
+        
         let faceAnchor = anchors.first as? ARFaceAnchor
-        print("\(faceAnchor?.transform.debugDescription)")
+        let LET = faceAnchor?.transform
+        if (printFreqCnt == 10) {
+            printFreqCnt = 0
+            
+            let FaceZEnd = simd_float4([0, 0, 1, 1])
+            let FaceZStart = simd_float4([0, 0, 0, 1])
+            var transformedFaceZVector = LET! * FaceZEnd - LET! * FaceZStart
+            print("zV: \(String(format:"%.3f %.3f %.3f %.3f",transformedFaceZVector[0],transformedFaceZVector[1],transformedFaceZVector[2],transformedFaceZVector[3]))")
+//            print("row 0: \(String(format:"%.3f %.3f %.3f %.3f",LET![0,0],LET![0,1],LET![0,2],LET![0,3]))")
+//            print("row 1: \(String(format:"%.3f %.3f %.3f %.3f",LET![1,0],LET![1,1],LET![1,2],LET![1,3]))")
+//            print("row 2: \(String(format:"%.3f %.3f %.3f %.3f",LET![2,0],LET![2,1],LET![2,2],LET![2,3]))")
+//            print("row 3: \(String(format:"%.3f %.3f %.3f %.3f",LET![3,0],LET![3,1],LET![3,2],LET![3,3]))")
+            print("mag: \(sqrt(transformedFaceZVector[0]*transformedFaceZVector[0] + transformedFaceZVector[1]*transformedFaceZVector[1] + transformedFaceZVector[2]*transformedFaceZVector[2]))")
+            print("\n")
+        } else {
+            printFreqCnt += 1
+        }
         LookAtPointX = Float(faceAnchor!.lookAtPoint.x)
         LookAtPointZ = Float(faceAnchor!.lookAtPoint.z)
         XLabel.text = String(format:"%.4f",faceAnchor!.lookAtPoint.x)
