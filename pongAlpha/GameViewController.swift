@@ -5,7 +5,7 @@
 //  Created by zzc on 10/27/18.
 //  Copyright © 2018 zzc. All rights reserved.
 //
-
+import ARKit
 import UIKit
 import SpriteKit
 import GameplayKit
@@ -19,8 +19,7 @@ class GameViewController: UIViewController {
             // Load the SKScene from 'GameScene.sks'
             if let scene = SKScene(fileNamed: "GameScene") {
                 // Set the scale mode to scale to fit the window
-                scene.scaleMode = .aspectFill
-                
+                scene.scaleMode = .aspectFit
                 // Present the scene
                 view.presentScene(scene)
             }
@@ -29,11 +28,12 @@ class GameViewController: UIViewController {
             
             view.showsFPS = true
             view.showsNodeCount = true
+        
         }
     }
 
     override var shouldAutorotate: Bool {
-        return true
+        return false
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
