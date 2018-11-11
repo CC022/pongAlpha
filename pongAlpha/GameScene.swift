@@ -9,11 +9,10 @@
 import SpriteKit
 import GameplayKit
 import ARKit
+import SceneKit
 
-class GameScene: SKScene, ARSessionDelegate {
-    var printFreqCnt = 0
-    var LookAtPointX: Float = 0.0
-    var LookAtPointZ: Float = 0.0
+class GameScene: SKScene, ARSessionDelegate, SKButtonDelegate {
+    var headRotation: Float = 0.0
     var myARSession = ARSession()
     
     // What: Pong game model
@@ -21,6 +20,7 @@ class GameScene: SKScene, ARSessionDelegate {
     // Where: https://github.com/Archetapp/Pong
     
     // Why: Pong is a classic game that has been remastered many times. Referencing existing pong game model will allow the project to be focus on the interaction part
+    var resetButton = SKButton()
     var ball = SKSpriteNode()
     var computer = SKSpriteNode()
     var player0 = SKSpriteNode()
@@ -37,9 +37,13 @@ class GameScene: SKScene, ARSessionDelegate {
     
     override func didMove(to view: SKView) {
         myARSession.delegate = self
-        myARSession.run(ARFaceTrackingConfiguration())
+        let myARConfiguration = ARFaceTrackingConfiguration()
+        myARConfiguration.worldAlignment = .camera
+        myARSession.run(myARConfiguration, options: [.resetTracking, .removeExistingAnchors])
         
-        
+        resetButton = self.childNode(withName: "resetButton") as! SKButton
+        resetButton.delegate = self
+        resetButton.isUserInteractionEnabled = true
         ball = self.childNode(withName: "ball") as! SKSpriteNode
         computer = self.childNode(withName: "computer") as! SKSpriteNode
         player0 = self.childNode(withName: "player0") as! SKSpriteNode
@@ -67,20 +71,21 @@ class GameScene: SKScene, ARSessionDelegate {
         computerScore = 0
     }
     
+    
     func serveBall() {
         player0ScoreLabel.text = "\(player0Score)"
         computerScoreLabel.text = "\(computerScore)"
         ball.texture = SKTexture(image: "😀".image()!)
         ball.position = CGPoint(x: 0, y: 0)
         ball.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
-        ball.physicsBody?.applyImpulse(CGVector(dx: 50, dy: 50))
+        ball.physicsBody?.applyImpulse(CGVector(dx: 45, dy: 45))
     }
     
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
-        computer.run(SKAction.moveTo(x: ball.position.x, duration: 0.2))
-        player0.run(SKAction.moveTo(x: getLookPosition(), duration: 0.5))
+        computer.run(SKAction.moveTo(x: ball.position.x, duration: 0.23))
+        player0.run(SKAction.moveTo(x: getLookPosition(), duration: 0))
         if ball.position.y < player0.position.y - player0.size.height * 2 {
             computerScore += 1
             serveBall()
@@ -94,58 +99,43 @@ class GameScene: SKScene, ARSessionDelegate {
 
 extension GameScene {
     func getLookPosition() -> CGFloat {
-        return (LookAtPointX > 0) ? self.frame.maxX : self.frame.minX
+        let leftMostPoint: CGFloat = 0.2
+        let rightMostPoint: CGFloat = -0.2
+        let minX = self.frame.minX
+        let maxX = self.frame.maxX
+        var positionInScene = (minX - maxX) / (rightMostPoint - leftMostPoint) * CGFloat(headRotation)
+        positionInScene = (positionInScene > maxX) ? maxX : positionInScene
+        positionInScene = (positionInScene < minX) ? minX : positionInScene
+        return positionInScene
     }
-    
-    //    func getLookPosition() -> CGFloat {
-    //        let leftMostTheta: CGFloat = 0.1
-    //        let rightMostTheta: CGFloat = -0.1
-    //        let minX = self.frame.minX
-    //        let maxX = self.frame.maxX
-    //        let theta = CGFloat(atan(LookAtPointX / LookAtPointZ))
-    //        var positionInScene = (minX - maxX) / (rightMostTheta - leftMostTheta) * theta
-    //        positionInScene = (positionInScene > maxX) ? maxX : positionInScene
-    //        positionInScene = (positionInScene < minX) ? minX : positionInScene
-    //        return positionInScene
-    //    }
-    
-    
-    //    func convertLookPoint(ToScenePosition point: Float) -> CGFloat {
-    //        let leftMostPoint: CGFloat = 0.1
-    //        let rightMostPoint: CGFloat = -0.1
-    //        let minX = self.frame.minX
-    //        let maxX = self.frame.maxX
-    //        var positionInScene = (minX - maxX) / (rightMostPoint - leftMostPoint) * CGFloat(point)
-    //        positionInScene = (positionInScene > maxX) ? maxX : positionInScene
-    //        positionInScene = (positionInScene < minX) ? minX : positionInScene
-    //        return positionInScene
-    //    }
     
     
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
         
         let faceAnchor = anchors.first as? ARFaceAnchor
-        let LET = faceAnchor?.transform
-        if (printFreqCnt == 10) {
-            printFreqCnt = 0
-            
-            let FaceZEnd = simd_float4([0, 0, 1, 1])
-            let FaceZStart = simd_float4([0, 0, 0, 1])
-            var transformedFaceZVector = LET! * FaceZEnd - LET! * FaceZStart
-            print("zV: \(String(format:"%.3f %.3f %.3f %.3f",transformedFaceZVector[0],transformedFaceZVector[1],transformedFaceZVector[2],transformedFaceZVector[3]))")
-//            print("row 0: \(String(format:"%.3f %.3f %.3f %.3f",LET![0,0],LET![0,1],LET![0,2],LET![0,3]))")
-//            print("row 1: \(String(format:"%.3f %.3f %.3f %.3f",LET![1,0],LET![1,1],LET![1,2],LET![1,3]))")
-//            print("row 2: \(String(format:"%.3f %.3f %.3f %.3f",LET![2,0],LET![2,1],LET![2,2],LET![2,3]))")
-//            print("row 3: \(String(format:"%.3f %.3f %.3f %.3f",LET![3,0],LET![3,1],LET![3,2],LET![3,3]))")
-            print("mag: \(sqrt(transformedFaceZVector[0]*transformedFaceZVector[0] + transformedFaceZVector[1]*transformedFaceZVector[1] + transformedFaceZVector[2]*transformedFaceZVector[2]))")
-            print("\n")
-        } else {
-            printFreqCnt += 1
-        }
-        LookAtPointX = Float(faceAnchor!.lookAtPoint.x)
-        LookAtPointZ = Float(faceAnchor!.lookAtPoint.z)
-        XLabel.text = String(format:"%.4f",faceAnchor!.lookAtPoint.x)
-        YLabel.text = String(format:"%.4f",faceAnchor!.lookAtPoint.y)
+        let faceT = faceAnchor?.transform
+        getFaceRotateAngle(from: faceT!)
+        
+    }
+    
+    func getFaceRotateAngle(from faceTransform: simd_float4x4) {
+        let unitZEnd = simd_float4([0, 0, 1, 1])
+        let unitZStart = simd_float4([0, 0, 0, 1])
+        let faceStart = faceTransform * unitZStart
+        let faceEnd = faceTransform * unitZEnd
+        let facingVector = faceEnd //- faceStart
+        var faceSCNNode = SCNNode()
+        faceSCNNode.simdTransform = faceTransform
+        headRotation = faceSCNNode.eulerAngles.y
+    }
+    
+    
+    func touchUpInsideSKButton(sender: SKButton) {
+        resetGame()
+        let myARConfiguration = ARFaceTrackingConfiguration()
+        myARConfiguration.worldAlignment = .camera
+        myARSession.run(myARConfiguration, options: [.resetTracking, .removeExistingAnchors])
+        serveBall()
     }
     
 }
