@@ -78,7 +78,18 @@ class GameScene: SKScene, ARSessionDelegate, SKButtonDelegate {
         ball.texture = SKTexture(image: "😀".image()!)
         ball.position = CGPoint(x: 0, y: 0)
         ball.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
-        ball.physicsBody?.applyImpulse(CGVector(dx: 45, dy: 45))
+        let xx = Int(arc4random_uniform(20))
+        let yy = Int(arc4random_uniform(10))
+        let zz = Int(arc4random_uniform(4))
+        var LorR = 1
+        if zz > 2{
+            LorR = 1
+        }
+        else{
+            LorR = -1
+        }
+        ball.physicsBody?.applyImpulse(CGVector(dx:LorR*(xx+30), dy: yy+35))
+        //ball.physicsBody?.applyImpulse(CGVector(dx: 45, dy: 45))
     }
     
     
