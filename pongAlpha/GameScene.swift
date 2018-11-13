@@ -26,8 +26,6 @@ class GameScene: SKScene, ARSessionDelegate, SKButtonDelegate {
     var player0 = SKSpriteNode()
     var player0ScoreLabel = SKLabelNode()
     var computerScoreLabel = SKLabelNode()
-    var XLabel = SKLabelNode()
-    var YLabel = SKLabelNode()
     
     var player0Score = 0
     var computerScore = 0
@@ -49,8 +47,6 @@ class GameScene: SKScene, ARSessionDelegate, SKButtonDelegate {
         player0 = self.childNode(withName: "player0") as! SKSpriteNode
         player0ScoreLabel = self.childNode(withName: "player0ScoreLabel") as! SKLabelNode
         computerScoreLabel = self.childNode(withName: "computerScoreLabel") as! SKLabelNode
-        XLabel = self.childNode(withName: "XLabel") as! SKLabelNode
-        YLabel = self.childNode(withName: "YLabel") as! SKLabelNode
         
         ball.zPosition = 0.5
         
@@ -95,7 +91,7 @@ class GameScene: SKScene, ARSessionDelegate, SKButtonDelegate {
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
-        computer.run(SKAction.moveTo(x: ball.position.x, duration: 0.23))
+        computer.run(SKAction.moveTo(x: ball.position.x, duration: 0.3))
         player0.run(SKAction.moveTo(x: getLookPosition(), duration: 0))
         if ball.position.y < player0.position.y - player0.size.height * 2 {
             computerScore += 1
