@@ -12,6 +12,7 @@ import ARKit
 import SceneKit
 
 class GameScene: SKScene, ARSessionDelegate, SKButtonDelegate {
+    let targetScore = 6
     var headRotation: Float = 0.0
     var myARSession = ARSession()
     
@@ -26,6 +27,7 @@ class GameScene: SKScene, ARSessionDelegate, SKButtonDelegate {
     var player0 = SKSpriteNode()
     var player0ScoreLabel = SKLabelNode()
     var computerScoreLabel = SKLabelNode()
+    var winLabel = SKLabelNode()
     
     var player0Score = 0
     var computerScore = 0
@@ -47,6 +49,7 @@ class GameScene: SKScene, ARSessionDelegate, SKButtonDelegate {
         player0 = self.childNode(withName: "player0") as! SKSpriteNode
         player0ScoreLabel = self.childNode(withName: "player0ScoreLabel") as! SKLabelNode
         computerScoreLabel = self.childNode(withName: "computerScoreLabel") as! SKLabelNode
+        winLabel = self.childNode(withName: "winLabel") as! SKLabelNode
         
         ball.zPosition = 0.5
         
@@ -63,6 +66,8 @@ class GameScene: SKScene, ARSessionDelegate, SKButtonDelegate {
     }
     
     func resetGame() {
+        winLabel.isHidden = true
+        self.isPaused = false
         player0Score = 0
         computerScore = 0
     }
@@ -100,6 +105,18 @@ class GameScene: SKScene, ARSessionDelegate, SKButtonDelegate {
             player0Score += 1
             serveBall()
         }
+        if computerScore == targetScore {
+            winLabel.text = "You Lose!"
+            winLabel.isHidden = false
+            self.isPaused = true
+        }
+        if player0Score == targetScore {
+            winLabel.text = "You win!"
+            winLabel.isHidden = false
+            self.isPaused = true
+        }
+        
+        
     }
     
 }
@@ -116,27 +133,18 @@ extension GameScene {
         return positionInScene
     }
     
-    
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
-        
         let faceAnchor = anchors.first as? ARFaceAnchor
         let faceT = faceAnchor?.transform
         getFaceRotateAngle(from: faceT!)
-        
     }
     
     func getFaceRotateAngle(from faceTransform: simd_float4x4) {
-        let unitZEnd = simd_float4([0, 0, 1, 1])
-        let unitZStart = simd_float4([0, 0, 0, 1])
-        let faceStart = faceTransform * unitZStart
-        let faceEnd = faceTransform * unitZEnd
-        let facingVector = faceEnd //- faceStart
-        var faceSCNNode = SCNNode()
+        let faceSCNNode = SCNNode()
         faceSCNNode.simdTransform = faceTransform
         headRotation = faceSCNNode.eulerAngles.y
     }
-    
-    
+
     func touchUpInsideSKButton(sender: SKButton) {
         resetGame()
         let myARConfiguration = ARFaceTrackingConfiguration()
@@ -144,10 +152,7 @@ extension GameScene {
         myARSession.run(myARConfiguration, options: [.resetTracking, .removeExistingAnchors])
         serveBall()
     }
-    
 }
-
-
 
 // What: emoji to UIImage
 
